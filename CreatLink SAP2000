@@ -1,0 +1,70 @@
+import math
+import rhinoscriptsyntax as rs
+import sys
+import os
+
+import comtypes.client
+import openpyxl
+
+
+
+
+
+# 将以下标志设置为True以附加到程序的现有实例
+# 否则将启动程序的新实例
+AttachToInstance = False
+
+# 将下面的标志设置为True以手动指定SAP2000.exe的路径
+# 这允许连接到SAP2000的其他版本，而不是最新的安装
+# 否则将启动最新安装的SAP2000版本
+SpecifyPath = False
+
+# 如果上面的标志设置为True，在下面指定SAP2000的路径
+ProgramPath = r'D:\Program Files\Computers and Structures\SAP2000 22\SAP2000.exe'
+
+# 模型的完整路径
+# 将它设置为模型所需的路径
+APIPath = "D:\CSiAPIexample"
+if not os.path.exists(APIPath):
+    try:
+        os.makedirs(APIPath)
+    except OSError:
+        pass
+    
+ModelPath = APIPath + os.sep + 'API_1-001.sdb'
+
+if AttachToInstance:
+    # 附加到正在运行的SAP2000实例
+    try:
+        # 获取活动的SapObject
+        mySapObject = comtypes.client.GetActiveObject("CSI.SAP2000.API.SapObject")
+    except (OSError, comtypes.COMError):
+        print("No running instance of the program found or failed to attach.")
+        sys.exit(-1)
+else:
+    # 创建API helper对象
+    helper = comtypes.client.CreateObject("CSiAPIv1.Helper")
+    # helper = helper.QueryInterface(comtypes.gen.SAP2000v1.cHelper)
+    if SpecifyPath:
+        try:
+        # 从指定的路径创建一个SAPObject实例
+            mySapObject = helper.CreateObject(ProgramPath)
+        except (OSError, comtypes.COMError):
+            print("Cannot start a new instance of the program from " + ProgramPath)
+            sys.exit(-1)
+    else:
+        try:
+        # 从最新安装的SAP2000创建一个SAPObject实例
+            mySapObject = helper.CreateObjectProgID("CSI.SAP2000.API.SapObject")
+        except (OSError, comtypes.COMError):
+            print("Cannot start a new instance of the program.")
+            sys.exit(-1)
+
+# 开始SAP2000程序
+mySapObject.ApplicationStart()
+
+# 创建SapModel对象
+SapModel = mySapObject.SapModel
+
+
+
